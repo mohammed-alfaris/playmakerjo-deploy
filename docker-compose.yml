@@ -1,0 +1,57 @@
+version: "3.8"
+
+services:
+  # ── MySQL Database ──
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: sportsvenue
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── ASP.NET Core API ──
+  api:
+    build:
+      context: ./sports-venue-api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Server=mysql;Port=3306;Database=sportsvenue;User=root;Password=${MYSQL_ROOT_PASSWORD};charset=utf8mb4;Allow User Variables=True;"
+      Jwt__SecretKey: ${JWT_SECRET_KEY}
+      Cors__Origins: ${CORS_ORIGINS:-https://admin.yallanhjez.com}
+      Uploads__BaseUrl: ${UPLOADS_BASE_URL:-https://api.yallanhjez.com}
+    volumes:
+      - api_uploads:/app/wwwroot/uploads
+      - ./sports-venue-api/SportsVenueApi/firebase-credentials.json:/app/firebase-credentials.json:ro
+    ports:
+      - "8000:8000"
+
+  # ── React Admin Dashboard ──
+  dashboard:
+    build:
+      context: ./sports-venue-dashboard
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: https://api.yallanhjez.com/api/v1
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+
+volumes:
+  mysql_data:
+  api_uploads:

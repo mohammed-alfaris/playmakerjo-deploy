@@ -1,0 +1,20 @@
+# Environment secrets (never commit!)
+.env
+*.env.local
+
+# Database backups
+backups/
+*.sql.gz
+
+# Firebase credentials
+firebase-credentials.json
+**/firebase-credentials.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vs/
+.vscode/
+.idea/
