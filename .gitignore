@@ -2,6 +2,10 @@
 .env
 *.env.local
 
+# ASP.NET Core environment-specific configs (contain secrets)
+sports-venue-api/SportsVenueApi/appsettings.Development.json
+sports-venue-api/SportsVenueApi/appsettings.Production.json
+
 # Database backups
 backups/
 *.sql.gz
