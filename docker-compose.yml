@@ -34,6 +34,7 @@ services:
       Cors__Origins: ${CORS_ORIGINS:-https://admin.playmakerjo.com}
       Uploads__BaseUrl: ${UPLOADS_BASE_URL:-https://api.playmakerjo.com}
       Google__WebClientId: ${GOOGLE_WEB_CLIENT_ID:-}
+      Firebase__CredentialFile: /app/firebase-credentials.json
     volumes:
       - api_uploads:/app/wwwroot/uploads
       - ./sports-venue-api/SportsVenueApi/firebase-credentials.json:/app/firebase-credentials.json:ro
