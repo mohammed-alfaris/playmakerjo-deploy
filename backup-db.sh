@@ -1,12 +1,12 @@
 #!/bin/bash
-# YallaNhjez — Daily MySQL backup script
-# Add to cron: 0 3 * * * /opt/yallanhjez/backup-db.sh
+# PlayMaker JO — Daily MySQL backup script
+# Add to cron: 0 3 * * * /opt/playmakerjo/backup-db.sh
 # Keeps the last 7 daily backups
 
 set -euo pipefail
 
-BACKUP_DIR="/opt/yallanhjez/backups"
-CONTAINER="yallanhjez-mysql-1"
+BACKUP_DIR="/opt/playmakerjo/backups"
+CONTAINER="playmakerjo-mysql-1"
 DATE=$(date +%Y-%m-%d_%H%M)
 KEEP_DAYS=7
 

@@ -1,10 +1,10 @@
-# YallaNhjez — Deployment Guide
+# PlayMaker JO — Deployment Guide
 
 ## Prerequisites
 - VPS with Ubuntu 22.04+ (1 vCPU, 1GB RAM minimum)
-- Domain: `yallanhjez.com` with DNS A records:
-  - `api.yallanhjez.com` -> server IP
-  - `admin.yallanhjez.com` -> server IP
+- Domain: `playmakerjo.com` with DNS A records:
+  - `api.playmakerjo.com` -> server IP
+  - `admin.playmakerjo.com` -> server IP
 
 ---
 
@@ -33,7 +33,7 @@ sudo apt install -y nginx certbot python3-certbot-nginx
 ```bash
 # Clone the repo
 cd /opt
-sudo git clone https://github.com/YOUR_USERNAME/YallaNhjez.git yallanhjez
+sudo git clone https://github.com/YOUR_USERNAME/PlayMaker JO.git yallanhjez
 cd yallanhjez
 
 # Create .env from template
@@ -49,8 +49,8 @@ nano .env
 ```env
 MYSQL_ROOT_PASSWORD=<your-generated-password>
 JWT_SECRET_KEY=<your-generated-key>
-UPLOADS_BASE_URL=https://api.yallanhjez.com
-CORS_ORIGINS=https://admin.yallanhjez.com
+UPLOADS_BASE_URL=https://api.playmakerjo.com
+CORS_ORIGINS=https://admin.playmakerjo.com
 ```
 
 ---
@@ -59,7 +59,7 @@ CORS_ORIGINS=https://admin.yallanhjez.com
 
 ```bash
 # Copy firebase-credentials.json to the API directory
-scp firebase-credentials.json user@server:/opt/yallanhjez/sports-venue-api/SportsVenueApi/firebase-credentials.json
+scp firebase-credentials.json user@server:/opt/playmakerjo/sports-venue-api/SportsVenueApi/firebase-credentials.json
 ```
 
 ---
@@ -77,7 +77,7 @@ sudo nginx -t
 sudo systemctl reload nginx
 
 # Get SSL certificates (after DNS is pointing to server)
-sudo certbot --nginx -d api.yallanhjez.com -d admin.yallanhjez.com
+sudo certbot --nginx -d api.playmakerjo.com -d admin.playmakerjo.com
 ```
 
 ---
@@ -85,7 +85,7 @@ sudo certbot --nginx -d api.yallanhjez.com -d admin.yallanhjez.com
 ## Step 5: Deploy
 
 ```bash
-cd /opt/yallanhjez
+cd /opt/playmakerjo
 
 # Build and start all services
 docker compose up -d --build
@@ -106,13 +106,13 @@ docker compose exec api dotnet SportsVenueApi.dll --seed
 
 ## Step 6: Verify
 
-1. **API Health**: `curl https://api.yallanhjez.com/health`
-2. **Dashboard**: Open `https://admin.yallanhjez.com` in browser
+1. **API Health**: `curl https://api.playmakerjo.com/health`
+2. **Dashboard**: Open `https://admin.playmakerjo.com` in browser
 3. **Login**: Use admin credentials on the dashboard
 4. **Mobile**: Build APK and test on mobile data:
    ```bash
    cd yalla-nhjez-app
-   flutter build apk --release --dart-define=API_BASE_URL=https://api.yallanhjez.com/api/v1
+   flutter build apk --release --dart-define=API_BASE_URL=https://api.playmakerjo.com/api/v1
    ```
 
 ---
@@ -121,14 +121,14 @@ docker compose exec api dotnet SportsVenueApi.dll --seed
 
 ```bash
 # Make backup script executable
-chmod +x /opt/yallanhjez/backup-db.sh
+chmod +x /opt/playmakerjo/backup-db.sh
 
 # Test it
 export MYSQL_ROOT_PASSWORD=<your-password>
-/opt/yallanhjez/backup-db.sh
+/opt/playmakerjo/backup-db.sh
 
 # Add to cron (daily at 3 AM)
-(crontab -l 2>/dev/null; echo "0 3 * * * MYSQL_ROOT_PASSWORD=<your-password> /opt/yallanhjez/backup-db.sh >> /var/log/yallanhjez-backup.log 2>&1") | crontab -
+(crontab -l 2>/dev/null; echo "0 3 * * * MYSQL_ROOT_PASSWORD=<your-password> /opt/playmakerjo/backup-db.sh >> /var/log/yallanhjez-backup.log 2>&1") | crontab -
 ```
 
 ---
@@ -162,5 +162,5 @@ gunzip < backups/sportsvenue_2026-04-15_0300.sql.gz | docker compose exec -T mys
 
 Set up **UptimeRobot** (free):
 1. Go to https://uptimerobot.com
-2. Add monitor: `https://api.yallanhjez.com/health` (HTTP, 5 min interval)
+2. Add monitor: `https://api.playmakerjo.com/health` (HTTP, 5 min interval)
 3. Add alert contact: your email/phone
