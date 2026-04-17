@@ -30,11 +30,32 @@ sudo apt install -y nginx certbot python3-certbot-nginx
 
 ## Step 2: Clone and Configure
 
+The platform lives in **4 GitHub repos** — one deploy repo + three source repos.
+Clone all four side-by-side into `/opt/playmakerjo`:
+
 ```bash
-# Clone the repo
-cd /opt
-sudo git clone https://github.com/YOUR_USERNAME/PlayMaker JO.git yallanhjez
-cd yallanhjez
+sudo mkdir -p /opt/playmakerjo
+sudo chown $USER:$USER /opt/playmakerjo
+cd /opt/playmakerjo
+
+# 1. Deploy configs (this repo — docker-compose, nginx, .env.example)
+git clone https://github.com/mohammed-alfaris/playmakerjo-deploy.git .
+
+# 2. Backend API source
+git clone https://github.com/mohammed-alfaris/playmakerjo-api.git sports-venue-api
+
+# 3. Admin dashboard source
+git clone https://github.com/mohammed-alfaris/playmakerjo-dashboard.git sports-venue-dashboard
+
+# Final directory structure should be:
+#   /opt/playmakerjo/
+#   ├── docker-compose.yml
+#   ├── nginx-server.conf
+#   ├── .env.example
+#   ├── sports-venue-api/        (cloned)
+#   └── sports-venue-dashboard/  (cloned)
+# The Flutter app (playmakerjo-app) is NOT deployed on the server —
+# users install the APK/IPA on their phones.
 
 # Create .env from template
 cp .env.example .env
