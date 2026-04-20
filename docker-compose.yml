@@ -21,7 +21,7 @@ services:
   # ── ASP.NET Core API ──
   api:
     build:
-      context: ./sports-venue-api
+      context: ./playmakerjo-api
       dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
@@ -31,20 +31,20 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__DefaultConnection: "Server=mysql;Port=3306;Database=sportsvenue;User=root;Password=${MYSQL_ROOT_PASSWORD};charset=utf8mb4;Allow User Variables=True;"
       Jwt__SecretKey: ${JWT_SECRET_KEY}
-      Cors__Origins: ${CORS_ORIGINS:-https://admin.playmakerjo.com}
+      Cors__Origins: ${CORS_ORIGINS:-https://admin.playmakerjo.com,https://playmakerjo.com,https://www.playmakerjo.com}
       Uploads__BaseUrl: ${UPLOADS_BASE_URL:-https://api.playmakerjo.com}
       Google__WebClientId: ${GOOGLE_WEB_CLIENT_ID:-}
       Firebase__CredentialFile: /app/firebase-credentials.json
     volumes:
       - api_uploads:/app/wwwroot/uploads
-      - ./sports-venue-api/SportsVenueApi/firebase-credentials.json:/app/firebase-credentials.json:ro
+      - ./playmakerjo-api/SportsVenueApi/firebase-credentials.json:/app/firebase-credentials.json:ro
     ports:
       - "8000:8000"
 
   # ── React Admin Dashboard ──
   dashboard:
     build:
-      context: ./sports-venue-dashboard
+      context: ./playmakerjo-dashboard
       dockerfile: Dockerfile
       args:
         VITE_API_URL: https://api.playmakerjo.com/api/v1

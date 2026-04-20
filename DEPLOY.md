@@ -44,10 +44,10 @@ cd /opt/playmakerjo
 git clone https://github.com/mohammed-alfaris/playmakerjo-deploy.git .
 
 # 2. Backend API source
-git clone https://github.com/mohammed-alfaris/playmakerjo-api.git sports-venue-api
+git clone https://github.com/mohammed-alfaris/playmakerjo-api.git playmakerjo-api
 
 # 3. Admin dashboard source
-git clone https://github.com/mohammed-alfaris/playmakerjo-dashboard.git sports-venue-dashboard
+git clone https://github.com/mohammed-alfaris/playmakerjo-dashboard.git playmakerjo-dashboard
 
 # 4. Marketing website source
 git clone https://github.com/mohammed-alfaris/playmakerjo-website.git playmakerjo-website
@@ -57,8 +57,8 @@ git clone https://github.com/mohammed-alfaris/playmakerjo-website.git playmakerj
 #   ├── docker-compose.yml
 #   ├── nginx-server.conf
 #   ├── .env.example
-#   ├── sports-venue-api/        (cloned)
-#   ├── sports-venue-dashboard/  (cloned)
+#   ├── playmakerjo-api/         (cloned)
+#   ├── playmakerjo-dashboard/   (cloned)
 #   └── playmakerjo-website/     (cloned)
 # The Flutter app (playmakerjo-app) is NOT deployed on the server —
 # users install the APK/IPA on their phones.
@@ -86,8 +86,11 @@ CORS_ORIGINS=https://admin.playmakerjo.com
 
 ```bash
 # Copy firebase-credentials.json to the API directory
-scp firebase-credentials.json user@server:/opt/playmakerjo/sports-venue-api/SportsVenueApi/firebase-credentials.json
+# Run this from your LOCAL machine (not the server)
+scp firebase-credentials.json user@server:/opt/playmakerjo/playmakerjo-api/SportsVenueApi/firebase-credentials.json
 ```
+
+> ⚠️ The API container will fail to start without this file. Get it from Firebase Console → Project Settings → Service Accounts → Generate new private key.
 
 ---
 
