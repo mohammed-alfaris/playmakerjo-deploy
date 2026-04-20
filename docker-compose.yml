@@ -52,6 +52,17 @@ services:
     ports:
       - "3000:80"
 
+  # ── Marketing Website ──
+  website:
+    build:
+      context: ./playmakerjo-website
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: https://api.playmakerjo.com/api/v1
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+
 volumes:
   mysql_data:
   api_uploads:

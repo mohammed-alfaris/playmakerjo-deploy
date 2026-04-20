@@ -3,6 +3,8 @@
 ## Prerequisites
 - VPS with Ubuntu 22.04+ (1 vCPU, 1GB RAM minimum)
 - Domain: `playmakerjo.com` with DNS A records:
+  - `playmakerjo.com` -> server IP
+  - `www.playmakerjo.com` -> server IP
   - `api.playmakerjo.com` -> server IP
   - `admin.playmakerjo.com` -> server IP
 
@@ -47,13 +49,17 @@ git clone https://github.com/mohammed-alfaris/playmakerjo-api.git sports-venue-a
 # 3. Admin dashboard source
 git clone https://github.com/mohammed-alfaris/playmakerjo-dashboard.git sports-venue-dashboard
 
+# 4. Marketing website source
+git clone https://github.com/mohammed-alfaris/playmakerjo-website.git playmakerjo-website
+
 # Final directory structure should be:
 #   /opt/playmakerjo/
 #   ├── docker-compose.yml
 #   ├── nginx-server.conf
 #   ├── .env.example
 #   ├── sports-venue-api/        (cloned)
-#   └── sports-venue-dashboard/  (cloned)
+#   ├── sports-venue-dashboard/  (cloned)
+#   └── playmakerjo-website/     (cloned)
 # The Flutter app (playmakerjo-app) is NOT deployed on the server —
 # users install the APK/IPA on their phones.
 
@@ -98,7 +104,7 @@ sudo nginx -t
 sudo systemctl reload nginx
 
 # Get SSL certificates (after DNS is pointing to server)
-sudo certbot --nginx -d api.playmakerjo.com -d admin.playmakerjo.com
+sudo certbot --nginx -d playmakerjo.com -d www.playmakerjo.com -d api.playmakerjo.com -d admin.playmakerjo.com
 ```
 
 ---
