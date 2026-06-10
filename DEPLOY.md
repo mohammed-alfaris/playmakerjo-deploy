@@ -98,9 +98,10 @@ scp firebase-credentials.json user@server:/opt/playmakerjo/playmakerjo-api/Sport
 
 ```bash
 # Copy Nginx config
-sudo cp nginx-server.conf /etc/nginx/sites-available/yallanhjez
-sudo ln -sf /etc/nginx/sites-available/yallanhjez /etc/nginx/sites-enabled/
+sudo cp nginx-server.conf /etc/nginx/sites-available/playmakerjo
+sudo ln -sf /etc/nginx/sites-available/playmakerjo /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
+# Existing servers: the file used to be named "yallanhjez" — mv it (and re-link) or remove the old symlink
 
 # Test and reload Nginx
 sudo nginx -t
@@ -141,13 +142,13 @@ docker compose exec api dotnet SportsVenueApi.dll --seed
 3. **Login**: Use admin credentials on the dashboard
 4. **Mobile**: Build APK and test on mobile data:
    ```bash
-   cd yalla-nhjez-app
+   cd playmakerjo-app
    flutter build apk --release --dart-define=API_BASE_URL=https://api.playmakerjo.com/api/v1
    ```
 
 ---
 
-## Step 7: Backups (optional)
+## Step 7: Backups (required)
 
 ```bash
 # Make backup script executable
@@ -157,9 +158,114 @@ chmod +x /opt/playmakerjo/backup-db.sh
 export MYSQL_ROOT_PASSWORD=<your-password>
 /opt/playmakerjo/backup-db.sh
 
-# Add to cron (daily at 3 AM)
-(crontab -l 2>/dev/null; echo "0 3 * * * MYSQL_ROOT_PASSWORD=<your-password> /opt/playmakerjo/backup-db.sh >> /var/log/yallanhjez-backup.log 2>&1") | crontab -
+# Add to cron (daily at 3 AM, with offsite copy — see "Offsite backups" in the hardening runbook)
+(crontab -l 2>/dev/null; echo "0 3 * * * MYSQL_ROOT_PASSWORD=<your-password> RCLONE_REMOTE=b2:playmakerjo-backups /opt/playmakerjo/backup-db.sh >> /var/log/playmakerjo-backup.log 2>&1") | crontab -
 ```
+
+---
+
+## Server hardening (one-time runbook)
+
+Run these once on the production server, in order.
+
+### 1. Swap (2GB)
+
+A 1GB box OOMs during docker builds — add swap first.
+
+```bash
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
+
+### 2. Firewall (ufw)
+
+> ⚠️ Keep your current SSH session open until you've confirmed a NEW session can connect.
+
+```bash
+sudo ufw allow OpenSSH
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw --force enable
+sudo ufw status
+```
+
+> Note: Docker publishes ports via iptables and **bypasses ufw** — ufw alone does NOT block ports published by docker compose. The `127.0.0.1:` bindings in `docker-compose.yml` are what actually closes 3306/8000/3000/3001 to the internet.
+
+### 3. Automatic security updates
+
+```bash
+sudo apt install -y unattended-upgrades
+sudo dpkg-reconfigure -plow unattended-upgrades
+```
+
+### 4. MySQL app user (existing volume)
+
+The `MYSQL_USER`/`MYSQL_PASSWORD` env vars in docker-compose.yml only apply on **first** volume init — on an existing server, create the user manually:
+
+```bash
+# Generate a password and save it
+openssl rand -base64 32
+
+# Create the user inside the running container (enter the root password when prompted)
+docker compose exec mysql mysql -uroot -p
+```
+
+```sql
+CREATE USER IF NOT EXISTS 'playmaker'@'%' IDENTIFIED BY '<generated-password>';
+GRANT ALL PRIVILEGES ON sportsvenue.* TO 'playmaker'@'%';
+FLUSH PRIVILEGES;
+```
+
+```bash
+# Add to /opt/playmakerjo/.env
+echo "MYSQL_APP_PASSWORD=<generated-password>" >> /opt/playmakerjo/.env
+
+# Pull the updated compose config and restart
+cd /opt/playmakerjo
+git pull
+docker compose up -d
+
+# Watch the API come back healthy
+curl https://api.playmakerjo.com/health
+```
+
+> Rollback: if the API can't connect, revert `User=playmaker;Password=${MYSQL_APP_PASSWORD}` in the compose connection string to `User=root;Password=${MYSQL_ROOT_PASSWORD}` and `docker compose up -d` again.
+
+### 5. Verify
+
+```bash
+# All port binds should show 127.0.0.1 (and mysql should publish nothing)
+docker compose ps
+
+# From an OUTSIDE machine — these must FAIL (timeout / connection refused):
+nc -zv <server-ip> 3306
+nc -zv <server-ip> 8000
+
+# The https endpoints must still work:
+curl https://api.playmakerjo.com/health
+curl -I https://admin.playmakerjo.com
+curl -I https://playmakerjo.com
+```
+
+### 6. Offsite backups (rclone)
+
+```bash
+sudo apt install -y rclone
+
+# Configure a remote — for Backblaze B2 follow https://rclone.org/b2/
+rclone config
+
+# Test run
+export MYSQL_ROOT_PASSWORD=<your-password>
+export RCLONE_REMOTE=b2:playmakerjo-backups
+/opt/playmakerjo/backup-db.sh
+rclone ls b2:playmakerjo-backups/playmakerjo-db
+```
+
+Then install the crontab line from Step 7 (it includes `RCLONE_REMOTE`).
 
 ---
 

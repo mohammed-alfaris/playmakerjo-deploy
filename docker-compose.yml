@@ -6,12 +6,12 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: sportsvenue
+      MYSQL_USER: playmaker
+      MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD}
       MYSQL_CHARACTER_SET_SERVER: utf8mb4
       MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
     volumes:
       - mysql_data:/var/lib/mysql
-    ports:
-      - "3306:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -29,7 +29,7 @@ services:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__DefaultConnection: "Server=mysql;Port=3306;Database=sportsvenue;User=root;Password=${MYSQL_ROOT_PASSWORD};charset=utf8mb4;Allow User Variables=True;"
+      ConnectionStrings__DefaultConnection: "Server=mysql;Port=3306;Database=sportsvenue;User=playmaker;Password=${MYSQL_APP_PASSWORD};charset=utf8mb4;Allow User Variables=True;"
       Jwt__SecretKey: ${JWT_SECRET_KEY}
       Cors__Origins: ${CORS_ORIGINS:-https://admin.playmakerjo.com,https://playmakerjo.com,https://www.playmakerjo.com}
       Uploads__BaseUrl: ${UPLOADS_BASE_URL:-https://api.playmakerjo.com}
@@ -39,7 +39,7 @@ services:
       - api_uploads:/app/wwwroot/uploads
       - ./playmakerjo-api/SportsVenueApi/firebase-credentials.json:/app/firebase-credentials.json:ro
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
 
   # ── React Admin Dashboard ──
   dashboard:
@@ -50,7 +50,7 @@ services:
         VITE_API_URL: https://api.playmakerjo.com/api/v1
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "127.0.0.1:3000:80"
 
   # ── Marketing Website ──
   website:
@@ -61,7 +61,7 @@ services:
         VITE_API_URL: https://api.playmakerjo.com/api/v1
     restart: unless-stopped
     ports:
-      - "3001:80"
+      - "127.0.0.1:3001:80"
 
 volumes:
   mysql_data:

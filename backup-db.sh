@@ -25,6 +25,14 @@ docker exec "$CONTAINER" mysqldump \
 
 echo "[$(date)] Backup saved: sportsvenue_${DATE}.sql.gz"
 
+# Offsite copy (only when RCLONE_REMOTE is set, e.g. b2:playmakerjo-backups)
+if [ -n "${RCLONE_REMOTE:-}" ]; then
+  echo "[$(date)] Copying backup to ${RCLONE_REMOTE}/playmakerjo-db..."
+  rclone copy "$BACKUP_DIR/sportsvenue_${DATE}.sql.gz" "${RCLONE_REMOTE}/playmakerjo-db" || true
+  rclone delete --min-age "${RCLONE_KEEP_DAYS:-30}d" "${RCLONE_REMOTE}/playmakerjo-db" || true
+  echo "[$(date)] Offsite copy done (keeping last ${RCLONE_KEEP_DAYS:-30} days)"
+fi
+
 # Delete backups older than $KEEP_DAYS days
 find "$BACKUP_DIR" -name "sportsvenue_*.sql.gz" -mtime +$KEEP_DAYS -delete
 
