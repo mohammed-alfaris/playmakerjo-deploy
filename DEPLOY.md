@@ -130,6 +130,8 @@ docker compose logs -f mysql     # MySQL logs
 docker compose logs -f dashboard # Dashboard logs
 
 # Seed the database (first time only)
+# ⚠️ Seeding creates demo logins with the dev passwords from SECRETS.md —
+# change the super_admin password immediately after seeding production.
 docker compose exec api dotnet SportsVenueApi.dll --seed
 ```
 

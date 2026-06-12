@@ -59,7 +59,7 @@ website at `https://playmakerjo.com` — all on one VPS via Docker Compose behin
 After pushing the change to GitHub:
 
 ```bash
-ssh root@178.104.136.20
+ssh root@<server-ip>                     # IP + access details in SECRETS.md (local only)
 cd /opt/playmakerjo/playmakerjo-api      # or playmakerjo-dashboard / playmakerjo-website
 git pull
 cd /opt/playmakerjo
