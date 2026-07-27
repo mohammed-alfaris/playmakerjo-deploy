@@ -35,6 +35,16 @@ services:
       Uploads__BaseUrl: ${UPLOADS_BASE_URL:-https://api.playmakerjo.com}
       Google__WebClientId: ${GOOGLE_WEB_CLIENT_ID:-}
       Firebase__CredentialFile: /app/firebase-credentials.json
+      # Releases slots held by app bookings nobody paid for. OFF unless set explicitly:
+      # it is the only thing in the system that cancels a booking without a human asking.
+      # Counter and recurring bookings are never eligible. Window defaults to 2 hours,
+      # shortened automatically for slots that start sooner than that.
+      #
+      # NOTE: this job assumes ONE api container. The `127.0.0.1:8000:8000` binding below is
+      # what enforces that today — it makes `--scale api=2` fail. If that ever changes, read
+      # the comment on BookingExpiryService before scaling.
+      Jobs__BookingExpiry__Enabled: ${BOOKING_EXPIRY_ENABLED:-false}
+      Jobs__BookingExpiry__WindowMinutes: ${BOOKING_EXPIRY_WINDOW_MINUTES:-120}
     volumes:
       - api_uploads:/app/wwwroot/uploads
       - ./playmakerjo-api/SportsVenueApi/firebase-credentials.json:/app/firebase-credentials.json:ro
