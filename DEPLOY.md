@@ -153,16 +153,28 @@ docker compose exec api dotnet SportsVenueApi.dll --seed
 ## Step 7: Backups (required)
 
 ```bash
-# Make backup script executable
 chmod +x /opt/playmakerjo/backup-db.sh
 
-# Test it
-export MYSQL_ROOT_PASSWORD=<your-password>
+# Run it once. No environment setup needed — the script sources .env itself, which is what
+# lets it work from cron. It refuses to run rather than guess if MYSQL_ROOT_PASSWORD is absent.
 /opt/playmakerjo/backup-db.sh
 
-# Add to cron (daily at 3 AM, with offsite copy — see "Offsite backups" in the hardening runbook)
-(crontab -l 2>/dev/null; echo "0 3 * * * MYSQL_ROOT_PASSWORD=<your-password> RCLONE_REMOTE=b2:playmakerjo-backups /opt/playmakerjo/backup-db.sh >> /var/log/playmakerjo-backup.log 2>&1") | crontab -
+# Install the nightly 3 AM entry
+/opt/playmakerjo/backup-db.sh --install-cron
+crontab -l | grep backup-db          # confirm it is actually there
 ```
+
+**Confirm the cron entry exists.** For a long time this step was documented but never
+performed, so nothing was ever backed up automatically and nothing said so.
+
+The script exits non-zero on any failure, so cron mails root. It writes to `*.part` and only
+renames to the real filename once the dump passes verification — valid gzip, above a size
+floor, table count matching the live database, and mysqldump's own `-- Dump completed` marker
+present. A failed run therefore leaves **no file**, rather than one that looks fine.
+
+Do not put `MYSQL_ROOT_PASSWORD` in the crontab. An earlier version of this document did, which
+put the database root password in plaintext in a file, in `crontab -l` output, and in the
+process list of every run.
 
 ---
 
@@ -290,8 +302,20 @@ docker compose logs -f api
 # Access MySQL shell
 docker compose exec mysql mysql -u root -p sportsvenue
 
-# Restore from backup
-gunzip < backups/sportsvenue_2026-04-15_0300.sql.gz | docker compose exec -T mysql mysql -u root -p"$MYSQL_ROOT_PASSWORD" sportsvenue
+# Check a backup is sound BEFORE trusting it — the same checks the nightly run uses
+./backup-db.sh --verify-only backups/sportsvenue_2026-04-15_0300.sql.gz
+
+# Rehearse the restore into a scratch schema first. Restoring straight over sportsvenue is
+# irreversible, and a dump that verifies can still surprise you.
+set -a; . ./.env; set +a
+docker compose exec -T mysql mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "CREATE DATABASE restorecheck;"
+gunzip < backups/sportsvenue_2026-04-15_0300.sql.gz | docker compose exec -T mysql mysql -uroot -p"$MYSQL_ROOT_PASSWORD" restorecheck
+docker compose exec -T mysql mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e \
+  "SELECT table_name, table_rows FROM information_schema.tables WHERE table_schema='restorecheck';"
+docker compose exec -T mysql mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE restorecheck;"
+
+# Only then, the real restore
+gunzip < backups/sportsvenue_2026-04-15_0300.sql.gz | docker compose exec -T mysql mysql -uroot -p"$MYSQL_ROOT_PASSWORD" sportsvenue
 ```
 
 ---
