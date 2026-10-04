@@ -44,6 +44,7 @@ services:
       # what enforces that today — it makes `--scale api=2` fail. If that ever changes, read
       # the comment on BookingExpiryService before scaling.
       Jobs__BookingExpiry__Enabled: ${BOOKING_EXPIRY_ENABLED:-false}
+      Jobs__Reminders__Enabled: ${REMINDERS_ENABLED:-true}
       Jobs__BookingExpiry__WindowMinutes: ${BOOKING_EXPIRY_WINDOW_MINUTES:-120}
     volumes:
       - api_uploads:/app/wwwroot/uploads
